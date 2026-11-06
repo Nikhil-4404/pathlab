@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An interactive pathfinding lab. Draw barriers and watch A*, Dijkstra's, and breadth-first search find their way.">
+  <meta name="theme-color" content="#0c1015">
+  <title>Pathlab — Find a way</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c5f477'/%3E%3Cpath d='M8 23V9h8v14h8V9' fill='none' stroke='%23101614' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script src="engine.js" defer></script>
+  <script src="maps.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7Z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m5 5 10 7-10 7ZM19 5v14"/></symbol>
+    <symbol id="i-wall" viewBox="0 0 24 24"><path d="M4 4h16v16H4ZM4 12h16M12 4v8M9 12v8M17 12v8"/></symbol>
+    <symbol id="i-erase" viewBox="0 0 24 24"><path d="m4 13 9-9 8 8-9 9H8l-4-4Zm5-5 8 8M12 21h9"/></symbol>
+    <symbol id="i-start" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8Z"/></symbol>
+    <symbol id="i-goal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-13h-8Z"/></symbol>
+  </defs></svg>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Pathlab home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 30 30"><path d="M6 23V7h9v16h9V7"/></svg></span>pathlab<span class="brand-dot">.</span></a>
+    <nav aria-label="Main navigation"><span class="nav-active">Playground</span><button id="help-button">How it works <svg class="icon"><use href="#i-info"/></svg></button></nav>
+    <span class="local-tag"><span></span> Runs on your device</span>
+  </header>
+
+  <main>
+    <div class="page-heading">
+      <div><div class="eyebrow">A LITTLE CURIOSITY. A LOT OF POSSIBILITIES.</div><h1>Find a way<span>.</span></h1><p>Build a world. Watch an algorithm explore it.</p></div>
+      <div class="main-actions"><button class="button secondary" id="clear-board"><svg class="icon"><use href="#i-reset"/></svg>Clear board</button><button class="button primary" id="run"><svg class="icon"><use href="#i-play"/></svg><span>Visualize A*</span><kbd>Space</kbd></button></div>
+    </div>
+
+    <div class="workspace">
+      <aside class="sidebar" aria-label="Search configuration">
+        <section class="algorithm-section">
+          <div class="section-heading"><h2><span>01</span> Algorithm</h2><span class="small-label">PICK YOUR EXPLORER</span></div>
+          <div class="algorithm-options" role="group" aria-label="Algorithm">
+            <button class="algorithm selected" data-algorithm="astar" aria-pressed="true"><span class="algorithm-symbol">A<span>*</span></span><span><strong>A* search</strong><small>Guided by a heuristic</small></span><span class="radio-dot"></span></button>
+            <button class="algorithm" data-algorithm="dijkstra" aria-pressed="false"><span class="algorithm-symbol dotted">D</span><span><strong>Dijkstra's</strong><small>Distance, in every direction</small></span><span class="radio-dot"></span></button>
+            <button class="algorithm" data-algorithm="bfs" aria-pressed="false"><span class="algorithm-symbol">B<span>fs</span></span><span><strong>Breadth-first</strong><small>One layer at a time</small></span><span class="radio-dot"></span></button>
+          </div>
+          <p class="algorithm-note" id="algorithm-note">Uses distance traveled + Manhattan distance to the goal to guide its search.</p>
+          <div class="guarantee"><svg class="icon"><use href="#i-spark"/></svg><span id="guarantee-text">Lowest cost, when reachable</span></div>
+        </section>
+
+        <section class="drawing-section">
+          <div class="section-heading"><h2><span>02</span> Drawing tools</h2></div>
+          <div class="tools" role="group" aria-label="Drawing tools">
+            <button class="tool selected" data-tool="wall" aria-pressed="true" title="Draw barriers (W)"><svg class="icon"><use href="#i-wall"/></svg><span>Wall</span><kbd>W</kbd></button>
+            <button class="tool" data-tool="erase" aria-pressed="false" title="Erase barriers (E)"><svg class="icon"><use href="#i-erase"/></svg><span>Erase</span><kbd>E</kbd></button>
+            <button class="tool" data-tool="start" aria-pressed="false" title="Place start (S)"><svg class="icon start-color"><use href="#i-start"/></svg><span>Start</span><kbd>S</kbd></button>
+            <button class="tool" data-tool="goal" aria-pressed="false" title="Place goal (G)"><svg class="icon goal-color"><use href="#i-goal"/></svg><span>Goal</span><kbd>G</kbd></button>
+            <button class="tool" data-tool="sand" aria-pressed="false" title="Paint sand: entry cost 3 (3)"><i class="terrain-swatch sand"></i><span>Sand</span><kbd>×3</kbd></button>
+            <button class="tool" data-tool="mud" aria-pressed="false" title="Paint mud: entry cost 5 (5)"><i class="terrain-swatch mud"></i><span>Mud</span><kbd>×5</kbd></button>
+            <button class="tool" data-tool="water" aria-pressed="false" title="Paint water: entry cost 9 (9)"><i class="terrain-swatch water"></i><span>Water</span><kbd>×9</kbd></button>
+            <button class="tool" data-tool="inspect" aria-pressed="false" title="Inspect a cell (I)"><svg class="icon"><use href="#i-info"/></svg><span>Inspect</span><kbd>I</kbd></button>
+          </div>
+          <p class="hint">Click and drag to draw. Drag either marker to move it.</p>
+          <label class="field-label" for="layout">Starting layout</label><div class="select-wrap"><select id="layout"><option value="switchback">The switchback</option><option value="terrain">The costly shortcut</option><option value="empty">An open field</option><option value="random">Scattered barriers</option><option value="custom" disabled>Custom / saved map</option></select></div>
+          <div class="maze-controls"><label class="field-label" for="maze-complexity">Maze complexity</label><select id="maze-complexity"><option value="1">Open · more connections</option><option value="2" selected>Balanced</option><option value="3">Tight · single passages</option></select><button id="generate-maze" class="button step-button">Generate maze</button></div>
+        </section>
+
+        <section class="animation-section">
+          <div class="section-heading"><h2><span>03</span> Animation</h2><output id="speed-value" for="speed">300/s</output></div>
+          <label class="sr-only" for="speed">Search animation speed</label><input id="speed" type="range" min="1" max="5" value="3" step="1" aria-valuetext="300 nodes per second"><div class="range-labels"><span>Take it slow</span><span>Full speed</span></div>
+          <button class="button step-button" id="step"><svg class="icon"><use href="#i-next"/></svg>Advance one step</button>
+        </section>
+        <div class="sidebar-foot"><span class="tiny-grid" aria-hidden="true">▦</span><span>4-way movement<br><strong>Open cells cost 1 · No diagonals</strong></span></div>
+      </aside>
+
+      <div class="lab">
+        <div class="map-toolbar"><span id="save-status" role="status">Maps stay in this browser.</span><div><button class="button compact" id="export-map">Export map</button><button class="button compact" id="import-map">Import map</button></div></div>
+        <section class="board-panel" aria-labelledby="canvas-heading">
+          <div class="board-toolbar"><div class="board-title"><span class="live-dot"></span><h2 id="canvas-heading">Your canvas</h2><span class="grid-size">48 × 28</span></div><div class="board-actions"><span class="status-pill" id="phase-label">READY</span><button id="clear-path" title="Clear visualization and keep the barriers">Clear path</button></div></div>
+          <div class="canvas-wrap"><canvas id="grid" width="1152" height="672" tabindex="0" role="application" aria-label="Pathfinding grid, 48 columns and 28 rows. Draw barriers or move the start and goal." aria-describedby="keyboard-help" aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space W E S G">Interactive grid with movable start and goal markers. Use arrow keys to choose a cell and Enter to draw.</canvas></div>
+          <div class="board-bottom"><div class="legend" aria-label="Grid legend"><span><i class="legend-start"></i>Start</span><span><i class="legend-goal"></i>Goal</span><span><i class="legend-wall"></i>Wall</span><span><i class="legend-frontier"></i>Frontier</span><span><i class="legend-visited"></i>Visited</span><span><i class="legend-path"></i>Path</span></div><span class="coordinates" id="coordinates">X — &nbsp; Y —</span></div>
+        </section>
+
+        <div class="results-heading"><h2>Under the hood <span>LIVE PERFORMANCE</span></h2><span id="result-summary" role="status" aria-live="polite">Ready when you are.</span></div>
+        <section class="metrics" aria-label="Performance metrics">
+          <article class="metric"><div class="metric-label"><span class="metric-dot visited-dot"></span>Nodes explored</div><div class="metric-value" id="visited-value">0<span> / 1,244</span></div><div class="metric-detail" id="coverage-detail">0% of walkable cells</div><div class="coverage-track"><div id="coverage-bar"></div></div></article>
+          <article class="metric"><div class="metric-label"><span class="metric-dot path-dot"></span>Path length</div><div class="metric-value" id="path-value">—<span> steps</span></div><div class="metric-detail" id="path-detail">Waiting for a route</div></article>
+          <article class="metric"><div class="metric-label">Search CPU <svg class="icon small-icon"><use href="#i-spark"/></svg></div><div class="metric-value" id="search-value">0.00<span> ms</span></div><div class="metric-detail">Algorithm work only</div></article>
+          <article class="metric"><div class="metric-label">Canvas CPU <svg class="icon small-icon"><use href="#i-wall"/></svg></div><div class="metric-value" id="render-value">0.00<span> ms</span></div><div class="metric-detail">Drawing the visualization</div></article>
+        </section>
+        <div class="playback-line"><div><span class="small-live-dot"></span><span id="playback-summary">Playback 0.00s · overhead 0.00s</span></div><button id="metrics-help" aria-label="Explain performance measurements"><svg class="icon"><use href="#i-info"/></svg></button></div>
+        <section class="inspector" aria-labelledby="inspector-heading"><div class="panel-heading"><h2 id="inspector-heading">Cell inspector</h2><span id="inspect-cell">Select Inspect, or pause and click a cell.</span></div><dl class="cell-facts"><div><dt>Entry cost</dt><dd id="inspect-cost">—</dd></div><div><dt id="g-label">Cost g</dt><dd id="inspect-g">—</dd></div><div><dt>Heuristic h</dt><dd id="inspect-h">—</dd></div><div><dt>Score f</dt><dd id="inspect-f">—</dd></div><div><dt>Parent (x, y)</dt><dd id="inspect-parent">—</dd></div><div><dt>State</dt><dd id="inspect-state">—</dd></div></dl><p id="selection-rule">A* selects the smallest g + h; equal scores favor a smaller h, then discovery order.</p></section>
+        <section class="comparison" aria-labelledby="comparison-heading"><div class="panel-heading"><h2 id="comparison-heading">Same map. Three approaches.</h2><button id="compare" class="button compact">Compare algorithms</button></div><p id="comparison-status" role="status">Compare route cost, explored cells, and search time on your current map.</p><div class="comparison-scroll" id="comparison-results" hidden><table><caption>Median of 5 runs after warm-up · animation excluded · local measurements</caption><thead><tr><th scope="col">Algorithm</th><th scope="col">Steps</th><th scope="col">Cost</th><th scope="col">Explored</th><th scope="col">Peak frontier</th><th scope="col">Search ms</th></tr></thead><tbody id="comparison-rows"></tbody></table></div></section>
+        <div class="insight"><span class="insight-label">THE IDEA</span><p id="insight-text">A* asks a simple question: <em>which next step looks most promising?</em></p><svg class="icon"><use href="#i-arrow"/></svg></div>
+      </div>
+    </div>
+    <p id="keyboard-help" class="sr-only">Focus the grid, use arrow keys to choose a cell, and press Enter to use the selected tool. W wall, E erase, S start, G goal, 3 sand, 5 mud, 9 water, I inspect. Space runs, pauses, or resumes. While paused, Enter inspects a cell. Clear path unlocks editing.</p>
+    <div class="sr-only" id="cell-announcement" aria-live="polite"></div>
+    <footer><span>PATHLAB <span class="footer-slash">/</span> THE ART OF GETTING THERE</span><span>Saved on your device. Export a map to take it with you.</span></footer>
+  </main>
+
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-top"><span class="eyebrow">FIELD NOTES</span><button id="close-help" aria-label="Close explanation">×</button></div><h2 id="help-title">A world of small decisions.</h2><p>Each move enters a neighboring cell: open ground costs 1, sand 3, mud 5, and water 9. Walls block movement. The starting cell costs nothing; start and goal markers sit on open ground.</p><div class="help-algorithms"><p><strong>A* search</strong> minimizes travel cost using g + Manhattan distance h. Equal scores favor smaller h, then discovery order.</p><p><strong>Dijkstra's</strong> minimizes travel cost using g alone. Equal scores favor discovery order.</p><p><strong>Breadth-first search</strong> finds the fewest moves. It ignores terrain for its choices, so its route can cost more. On entirely open-cost ground, its order matches Dijkstra's.</p></div><h3>Inspect and compare</h3><p>Pause and click a cell, or choose Inspect. g is the known travel cost for A*/Dijkstra and the number of moves for BFS. h is only used by A*. f is g + h; parent points to the previous cell. Unseen cells have no search values yet.</p><p>Compare runs all algorithms on an identical map, warms each once, then reports the median of five runs with rotating order. Search timing includes initialization and event generation, but excludes visualization. Results are specific to your browser and device; very small differences may be timer noise.</p><h3>Playback measurements</h3><p><strong>Search CPU</strong> measures setup and iterator work. <strong>Canvas CPU</strong> measures drawing calls, not GPU completion. <strong>Playback</strong> excludes pauses. <strong>Overhead</strong> is playback minus these CPU measurements: pacing, UI updates, and browser scheduling.</p><h3>Keep your maps</h3><p>Your latest board is saved locally after edits and restored on reload. Browser storage belongs to this page's origin; private browsing, clearing browser data, or moving to a different address can affect it. Export JSON for a portable backup. Import validates a 48 × 28 map before replacing your board. No map data is sent to a server.</p><p>Generate maze creates connected passages. Open complexity adds more connections; Tight keeps single passages. This controls passage density, not a guaranteed solving difficulty.</p><div class="help-shortcuts"><span><kbd>W</kbd> Wall</span><span><kbd>E</kbd> Erase</span><span><kbd>S/G</kbd> Markers</span><span><kbd>3/5/9</kbd> Terrain</span><span><kbd>I</kbd> Inspect</span><span><kbd>Space</kbd> Play / pause</span></div></dialog>
+  <dialog id="import-dialog" aria-labelledby="import-title"><div class="dialog-top"><span class="eyebrow">YOUR MAPS</span><button id="close-import" aria-label="Close map import">×</button></div><h2 id="import-title">Bring a world back.</h2><p>Choose an exported JSON file or paste its contents. Loading a valid map replaces your current board and its local save.</p><label for="import-file" class="field-label">Map file · up to 256 KiB</label><input id="import-file" type="file" accept=".json,application/json"><label for="import-json" class="field-label">Map JSON</label><textarea id="import-json" rows="8" maxlength="262144" spellcheck="false" placeholder="Paste exported map JSON here"></textarea><p id="import-error" role="alert"></p><button id="import-apply" class="button primary">Load &amp; replace board</button></dialog>
+</body>
+</html>
