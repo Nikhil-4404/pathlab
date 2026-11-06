@@ -8,7 +8,8 @@ Current milestone: the five requested upgrades are implemented, with pure-logic 
 
 - Target: public repository `Nikhil-4404/pathlab`, branch `main`.
 - Scope: application, tests, specifications, README, and app-only screenshots. Local saves, scratch files, downloads, and credentials are excluded. Added `.gitignore`; source credential-pattern scan passed.
-- Publication status: prepared locally; remote creation and push are pending. Git remote and commit history are the canonical source publication records.
+- [x] Verified Complete: created public repository https://github.com/Nikhil-4404/pathlab and pushed `main`; GitHub API confirmed `private: false`, default branch `main`, and source commit `065004b68aa848ec963e16c569376b3bd2d169e6`. Git remote and commit history are the canonical source publication records.
+- Reran `node --test tests/*.test.cjs` on 2026-11-06: 39 passed, 0 failed. `git diff --cached --check` passed before the initial commit. App hosting was not enabled.
 
 | State | Scope | Requirements | Evidence / limit |
 |---|---|---|---|
